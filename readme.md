@@ -14,50 +14,52 @@ Computer simulations of polymers are based on a set of formulation parameters, i
 
 **Distributions of `chiN`, `fA`, and `tau`:**
 
-<div style="display: flex; gap: 10px;">
-  <img src="images/chiN.png" alt="chiN" style="width: 33%;">
-  <img src="images/fA.png" alt="fA" style="width: 33%;">
-  <img src="images/tau.png" alt="tau" style="width: 33%;">
-</div><br>
+<div style="display: flex; flex-wrap: nowrap; gap: 10px;">
+  <img src="images/chiN.png" alt="chiN" style="height: 200px; width: auto;">
+  <img src="images/fA.png" alt="fA" style="height: 200px; width: auto;">
+  <img src="images/tau.png" alt="tau" style="height: 200px; width: auto;">
+</div>
 
 The miktoarm system can structure itself into multiple ordered phases depending on the values of `chiN`, `fA`, and `tau`. For the purpose of demonstrating my research, I will focus on the two-dimensional HEX phase. The density of the HEX phase looks as follows.
 
-<div style="display: flex; gap: 10px; justify-content: center;">
-  <img src="images/correct.png" alt="chiN_tau" style="width: 33%;">
-</div><br>
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="images/correct.png" alt="correct" style="height: 200px; width: auto;">
+</div>
+
+<br>
 
 Our first sign of concern is seen in the values of cell length in the 3D-space of `chiN`, `fA`, and `tau`. Note that `L` represents cell length in the images below. Given that cell length is expected to be a continuous function of `chiN`, `fA`, and `tau`, the sudden spikes of `L` near 0.5, 0.6, and 0.7 on the axis of `fA` are alarming. In addition, there are regions in the 3D-space where the transitioning of `L` does not seem smooth.<br>
 
 **Highlighting Cell Length in the Space of `chiN`, `fA`, and `tau`:**
 
-<div style="display: flex; gap: 10px;">
-  <img src="images/chiN_tau.png" alt="chiN_tau" style="width: 32%;">
-  <img src="images/fA_chiN.png" alt="fA_chiN" style="width: 32%;">
-  <img src="images/fA_tau.png" alt="fA_tau" style="width: 42%;">
-</div><br>
+<div style="display: flex; flex-wrap: nowrap; gap: 10px;">
+  <img src="images/chiN_tau.png" alt="chiN_tau" style="height: 200px; width: auto;">
+  <img src="images/fA_chiN.png" alt="fA_chiN" style="height: 200px; width: auto;">
+  <img src="images/fA_tau.png" alt="fA_tau" style="height: 200px; width: auto;">
+</div>
 
 After observing this 3D plot and visualizing the densities for our simulations, we realized that the densities from simulations that did not converge properly were negatively impacting the smoothness of `L` across `chiN`, `fA`, and `tau`. We identified five potential classes for our densities: correct (converged properly), bleeding, disordered, hollow, and double period.
 
-<div style="display: flex; flex-direction: row; gap: 10px; justify-content: center; align-items: center; width: 100%; white-space: nowrap;">
-  <div style="display: inline-block; text-align: center;">
+<div style="display: flex; flex-wrap: nowrap; gap: 10px; justify-content: center; align-items: center; width: 100%; white-space: nowrap;">
+  <div style="text-align: center;">
     <div>Correct</div>
-    <img src="images/correct.png" alt="correct" style="width: 100px; height: auto;">
+    <img src="images/correct.png" alt="correct" style="height: 150px; width: auto;">
   </div>
-  <div style="display: inline-block; text-align: center;">
+  <div style="text-align: center;">
     <div>Bleeding</div>
-    <img src="images/bleeding.png" alt="bleeding" style="width: 100px; height: auto;">
+    <img src="images/bleeding.png" alt="bleeding" style="height: 150px; width: auto;">
   </div>
-  <div style="display: inline-block; text-align: center;">
+  <div style="text-align: center;">
     <div>Disordered</div>
-    <img src="images/disordered.png" alt="disordered" style="width: 100px; height: auto;">
+    <img src="images/disordered.png" alt="disordered" style="height: 150px; width: auto;">
   </div>
-  <div style="display: inline-block; text-align: center;">
+  <div style="text-align: center;">
     <div>Hollow</div>
-    <img src="images/hollow.png" alt="hollow" style="width: 100px; height: auto;">
+    <img src="images/hollow.png" alt="hollow" style="height: 150px; width: auto;">
   </div>
-  <div style="display: inline-block; text-align: center;">
+  <div style="text-align: center;">
     <div>Double</div>
-    <img src="images/double.png" alt="double" style="width: 100px; height: auto;">
+    <img src="images/double.png" alt="double" style="height: 150px; width: auto;">
   </div>
 </div>
 
@@ -89,11 +91,13 @@ I clustered the data into 5 categories.
 
 - **Cluster 4**: contains disordered densities.
 
-<div style="display: flex; gap: 10px;">
-  <img src="images/chiN_tau_cluster.png" alt="chiN_tau_cluster" style="width: 33%;">
-  <img src="images/chiN_vs_fA_cluster.png" alt="chiN_vs_fA_cluster" style="width: 33%;">
-  <img src="images/fa_tau_cluster.png" alt="fa_tau_cluster" style="width: 33%;">
-</div><br>
+<div style="display: flex; flex-wrap: nowrap; gap: 10px;">
+  <img src="images/chiN_tau_cluster.png" alt="chiN_tau_cluster" style="height: 200px; width: auto;">
+  <img src="images/chiN_vs_fA_cluster.png" alt="chiN_vs_fA_cluster" style="height: 200px; width: auto;">
+  <img src="images/fa_tau_cluster.png" alt="fa_tau_cluster" style="height: 200px; width: auto;">
+</div>
+
+<br>
 
 Since we do not have a model to predict cell length yet, the best approach to estimate cell length for our simulations is to use the `L` value from the nearest formulation in the 3D space of `chiN`, `fA`, and `tau` that converged properly. In the `nearest_L_bad_sims.py` script, I implemented code to find the nearest neighbor of each 'bad' formulation (i.e., one that did not converge properly) in the set of 'good' formulations (i.e., those that did converge properly) by computing the L2 norm of each formulation in the 'bad' set with every formulation in the 'good' set, and returning the 'good' formulation that minimizes this norm.
 
