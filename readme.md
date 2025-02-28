@@ -10,7 +10,7 @@ Our goal is to utilize this model to accelerate computer simulations of polymers
 
 ## Initial Concerns about the Data before Modeling Cell Length
 
-Computer simulations of polymers are based on a set of formulation parameters, initial density fields, and initial cell length. The formulation parameters of the miktoarm system are `chiN`, `fA`, and `tau`. Cell length is the value we are trying to predict, and density fields are chosen from previous simulations that converged properly. For our simulations, `chiN`, `fA`, and `tau` are chosen uniformly.
+Computer simulations of polymers are based on a set of formulation parameters, initial density fields, and initial cell length. In our experiments, the formulation parameters of the miktoarm system are `chiN`, `fA`, and `tau`. Cell length is the value we are trying to predict, and density fields are chosen from previous simulations that converged properly. For our simulations, `chiN`, `fA`, and `tau` are chosen uniformly.
 
 **Distributions of `chiN`, `fA`, and `tau`:**
 
@@ -69,7 +69,7 @@ The code used to cluster the densities is seen in the `cluster_densities.py` fil
 
 ### HEX Clustering Implementation Details (for nerds):
 
-1. For each density.dat file (of each formulation), extract the 3rd column.
+1. For each density.dat file (of each formualtion's simulation results), extract the 3rd column.
 
 2. Reshape the column into a 32x32 matrix.
 
@@ -123,13 +123,13 @@ Since we do not have a model to predict cell length yet, the best approach to es
 
 4. Compile a file that contains the 'bad' formulations along with their corresponding estimated `L` values.
 
-5.Run `create_test_dirs.py` to create the directories needed to run simulations for each formulation.
+5. Run `create_test_dirs.py` to create the directories needed to run simulations for each formulation.
 
 6. Run `re_simulate_batch.sh` to simulate each formulation.
 
 ## Current Work
 
-After correcting all the values of `L` by re-simulating all the `bad` formulations, I created a baseline gradient boosted trees model to evaluate the performance of using predicted cell lengths in the computer simulations. I plan to test the simulations' convergence rates with the predicted values of `L` for formulations in the test set.
+After correcting all the values of `L` by re-simulating all the 'bad' formulations, I created a baseline gradient boosted trees model to evaluate the performance of using predicted cell lengths in the computer simulations. I plan to test the simulations' convergence rates with the predicted values of `L` with formulations in the test set.
 
 ### Implementation Details for Predicting Cell Length (for nerds):
 
@@ -147,11 +147,11 @@ After correcting all the values of `L` by re-simulating all the `bad` formulatio
 
 7. Use the model to create predictions on the test set.
 
-8. Unscale the features in the test set to their original scales for `chiN`, `fA`, and `tau`. Save these with the predicted values of `L` and uniformly sample the number of formulations to be used in the experiment. We limit this number because the simulations may take a long time even if the cell length converges faster.
+8. Unscale the features in the test set to their original scales for `chiN`, `fA`, and `tau`. Save these with the predicted values of `L` and uniformly sample the number of formulations to be used in the experiment. We limit this number because the simulations may take a long time to converge even if the cell length converges faster.
 
 I will compare the performance of initially setting the cell length using predicted values against that obtained by using the cell length from the formulation's nearest converged neighbor. The implementation details for finding the cell length of the formulation's nearest neighbor are similar to those used in the previous nearest neighbor search.
 
-After obtaining datasets containing formulations and their corresponding predicted and nearest neighbor `L`, I will run simulations for each formulation for both values. During these simulations, I will collect performance metrics for each step—particularly total runtime and the number of iterations required for the simulations to converge. I will directly compare these metrics to determine the effectiveness of predicting cell length for running computer simulations of polymers.
+After obtaining datasets containing formulations and their corresponding predicted and nearest neighbor `L`, I will run simulations for each formulation for both values. During these simulations, I will collect performance metrics for each step—particularly total runtime and the number of iterations required for the simulations to converge. I will directly compare these metrics to determine the effectiveness of predicting cell length for imporving convergence rate of computer simulations.
 
 ### Current Work Flow
 
