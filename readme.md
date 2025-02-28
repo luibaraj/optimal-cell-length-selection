@@ -31,9 +31,9 @@ Our first sign of concern is seen in the values of cell length in the 3D-space o
 **Highlighting Cell Length in the Space of `chiN`, `fA`, and `tau`:**
 
 <div style="display: flex; gap: 10px;">
-  <img src="images/chiN_tau.png" alt="chiN_tau" style="width: 33%;">
-  <img src="images/fA_chiN.png" alt="fA_chiN" style="width: 33%;">
-  <img src="images/fA_tau.png" alt="fA_tau" style="width: 33%;">
+  <img src="images/chiN_tau.png" alt="chiN_tau" style="width: 32%;">
+  <img src="images/fA_chiN.png" alt="fA_chiN" style="width: 32%;">
+  <img src="images/fA_tau.png" alt="fA_tau" style="width: 32%;">
 </div><br>
 
 After observing this 3D plot and visualizing the densities for our simulations, we realized that the densities from simulations that did not converge properly were negatively impacting the smoothness of `L` across `chiN`, `fA`, and `tau`. We identified five potential classes for our densities: correct (converged properly), bleeding, disordered, hollow, and double period.
@@ -41,23 +41,23 @@ After observing this 3D plot and visualizing the densities for our simulations, 
 <div style="display: flex; gap: 10px;">
   <div style="text-align: center;">
     <div>Correct</div>
-    <img src="images/correct.png" alt="correct" style="width: 100%;">
+    <img src="images/correct.png" alt="correct" style="width: 20%;">
   </div>
   <div style="text-align: center;">
     <div>Bleeding</div>
-    <img src="images/bleeding.png" alt="bleeding" style="width: 100%;">
+    <img src="images/bleeding.png" alt="bleeding" style="width: 20%;">
   </div>
   <div style="text-align: center;">
     <div>Disordered</div>
-    <img src="images/disordered.png" alt="disordered" style="width: 100%;">
+    <img src="images/disordered.png" alt="disordered" style="width: 20%;">
   </div>
   <div style="text-align: center;">
     <div>Hollow</div>
-    <img src="images/hollow.png" alt="hollow" style="width: 100%;">
+    <img src="images/hollow.png" alt="hollow" style="width: 20%;">
   </div>
   <div style="text-align: center;">
     <div>Double</div>
-    <img src="images/double.png" alt="double" style="width: 100%;">
+    <img src="images/double.png" alt="double" style="width: 20%;">
   </div>
 </div><br>
 
