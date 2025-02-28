@@ -38,7 +38,7 @@ Our first sign of concern is seen in the values of cell length in the 3D-space o
 
 After observing this 3D plot and visualizing the densities for our simulations, we realized that the densities from simulations that did not converge properly were negatively impacting the smoothness of `L` across `chiN`, `fA`, and `tau`. We identified five potential classes for our densities: correct (converged properly), bleeding, disordered, hollow, and double period.
 
-<div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
+<div style="display: flex; flex-wrap: nowrap; gap: 10px; justify-content: center; align-items: center;">
   <div style="text-align: center;">
     <div>Correct</div>
     <img src="images/correct.png" alt="correct" style="width: 100px; height: auto;">
