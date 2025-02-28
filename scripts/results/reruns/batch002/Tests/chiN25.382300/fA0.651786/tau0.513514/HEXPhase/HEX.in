@@ -1,0 +1,118 @@
+InputFileVersion = 3
+
+models {
+  # The number of independent models/cells in the simulation
+  NumModels = 1
+
+  # Settings independent of model replica
+  # All models coexisting in a simulation have the same Hamiltonian and the same chemical constituents.
+  # Composition parameters, interactions, cell shape/volume, field seeds etc. can be different
+  ModelType = BlockPolymerMelt2Spec
+
+  monomers {
+    nspecies = 2
+    kuhnlen = 1.0 1.0 
+  }
+
+  chains {
+    nchains   = 1
+    polymerReferenceN = 100.
+    
+
+    chain1 {
+      label  = A(BA')3
+      architecture = star
+      NumArmTypes = 2
+      JoinBeadSpecies = 1
+
+      arm1{
+      statistics   =  DGC
+      NBeads = 37
+      nblocks = 1
+      blockspecies = 1 
+      NperBlock = 37
+      armmultiplicity= 1
+      }
+      arm2{
+      statistics   =  DGC
+      NBeads = 62
+      nblocks = 2
+      blockspecies = 1 2
+      NperBlock = 36 26
+      armmultiplicity = 3
+      }
+    }
+  }
+
+
+  model1 {
+    cell {
+      dim = 2
+      cellscaling = 3.48767040584
+      celllengths = 1.0 1.0
+      cellangles  = 120
+      npw = 32 32
+
+      spacegroupname = p6mm
+      symmetrize = on
+    }
+
+
+    interactions {
+      chiN12 = 25.382300
+    }
+
+    composition {
+      ensemble     = canonical
+      chainvolfrac = 1.0
+    }
+
+    operators {
+      CalcHamiltonian       = true
+      CalcStressTensor      = true
+      CalcChemicalPotential = false
+      IncludeIdealGasTerms  = false
+    }
+
+    initfields {
+      ReadInputFields = HFields
+      InputFieldsFile = fields_k.in
+    }
+  }
+}
+
+
+simulation {
+  jobtype = SCFT
+
+  FieldUpdater = SIS
+
+  NumTimeStepsPerBlock = 100
+  NumBlocks =  10000
+
+  TimeStepDT = 0.01
+  lambdaForceScale =  1.0 1.0
+  lambdaStressScale = 0.2
+
+  SCFTForceStoppingTol = 1e-5
+  SCFTStressStoppingTol = 1e-4
+
+  VariableCell = true
+
+  IO {
+    KeepDensityHistory   = false
+    KeepFieldHistory     = false
+    DensityOutputByChain = false
+
+    OutputFormattedFields = True 
+    OutputFields         = HFields
+    FieldOutputSpace     = both  # rspace, kspace or both
+  }
+}
+
+parallel {
+  CUDA_selectdevice = 0
+  CUDA_threadblocksize = 128
+
+  OpenMP_nthreads = 1
+}
