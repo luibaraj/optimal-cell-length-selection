@@ -33,7 +33,7 @@ Our first sign of concern is seen in the values of cell length in the 3D-space o
 <div style="display: flex; gap: 10px;">
   <img src="images/chiN_tau.png" alt="chiN_tau" style="width: 32%;">
   <img src="images/fA_chiN.png" alt="fA_chiN" style="width: 32%;">
-  <img src="images/fA_tau.png" alt="fA_tau" style="width: 32%;">
+  <img src="images/fA_tau.png" alt="fA_tau" style="width: 42%;">
 </div><br>
 
 After observing this 3D plot and visualizing the densities for our simulations, we realized that the densities from simulations that did not converge properly were negatively impacting the smoothness of `L` across `chiN`, `fA`, and `tau`. We identified five potential classes for our densities: correct (converged properly), bleeding, disordered, hollow, and double period.
