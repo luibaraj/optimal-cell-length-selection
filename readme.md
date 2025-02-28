@@ -38,28 +38,29 @@ Our first sign of concern is seen in the values of cell length in the 3D-space o
 
 After observing this 3D plot and visualizing the densities for our simulations, we realized that the densities from simulations that did not converge properly were negatively impacting the smoothness of `L` across `chiN`, `fA`, and `tau`. We identified five potential classes for our densities: correct (converged properly), bleeding, disordered, hollow, and double period.
 
-<div style="display: flex; gap: 10px;">
+<div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
   <div style="text-align: center;">
     <div>Correct</div>
-    <img src="images/correct.png" alt="correct" style="width: 20%;">
+    <img src="images/correct.png" alt="correct" style="width: 100px; height: auto;">
   </div>
   <div style="text-align: center;">
     <div>Bleeding</div>
-    <img src="images/bleeding.png" alt="bleeding" style="width: 20%;">
+    <img src="images/bleeding.png" alt="bleeding" style="width: 100px; height: auto;">
   </div>
   <div style="text-align: center;">
     <div>Disordered</div>
-    <img src="images/disordered.png" alt="disordered" style="width: 20%;">
+    <img src="images/disordered.png" alt="disordered" style="width: 100px; height: auto;">
   </div>
   <div style="text-align: center;">
     <div>Hollow</div>
-    <img src="images/hollow.png" alt="hollow" style="width: 20%;">
+    <img src="images/hollow.png" alt="hollow" style="width: 100px; height: auto;">
   </div>
   <div style="text-align: center;">
     <div>Double</div>
-    <img src="images/double.png" alt="double" style="width: 20%;">
+    <img src="images/double.png" alt="double" style="width: 100px; height: auto;">
   </div>
-</div><br>
+</div>
+<br>
 
 We need to rerun the simulations for densities that did not converge properly to correct our values of `L`. Given that each simulation for the HEX phase takes roughly 2–3 minutes—and much longer for the other phases—it would be impractical to redo every simulation across all formulation parameters. Instead, I implemented a clustering algorithm to group together the formulations based on if they achieved the correct density, allowing us to selectively rerun the problematic simulations without having to touch the ones that converged properly.
 
