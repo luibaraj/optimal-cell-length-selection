@@ -66,52 +66,25 @@ def collect_density_data(base_directory, phase):
     return df
 
 # -------------------------------
-# STEP 2: Prepare Density Profile and Compute FFT
-# -------------------------------
-def prepare_density_profile(profile_list):
-    """
-    Reshape a flat density profile into a 32x32 image.
-    """
-    profile_array = np.array(profile_list)
-    image = profile_array.reshape((32, 32))
-    return image
-
-def compute_normalized_fft(image):
-    """
-    Compute the normalized 2D FFT of an image.
-    """
-    fft_image = np.fft.fft2(image)
-    norm = np.linalg.norm(fft_image.flatten())
-    return fft_image / norm if norm != 0 else fft_image
-
-# -------------------------------
-# STEP 3: Compute Dot Product Vector
-# -------------------------------
-def compute_dot_product_vector(sample_fft, rep_fft_vectors):
-    """
-    Compute absolute dot product vector between a sample FFT (flattened)
-    and each reference FFT vector.
-    """
-    sample_vec = sample_fft.flatten()
-    dp_vector = np.array([np.dot(sample_vec, rep_vec) for rep_vec in rep_fft_vectors.values()])
-    return abs(dp_vector)
-
-# -------------------------------
-# STEP 4: Process Density Data and Compute FFTs
+# STEP 2: Process Density Data and Compute FFTs & Dot Product Vectors
 # -------------------------------
 def process_density_data(df, rep_formulations_str):
     """
     Process the density DataFrame:
-    - Convert density profiles to images.
+    - Convert density profiles to images (reshaped to 32x32 arrays).
     - Compute normalized FFT for each image.
     - Build reference FFT vectors from rep_formulations_str.
     - Compute dot product vectors for each sample.
     """
     df2 = df.copy()
     
-    # Create density image and normalized FFT columns
-    df2["density_image"] = df2["density_profile"].apply(prepare_density_profile)
-    df2["normalized_fft"] = df2["density_image"].apply(compute_normalized_fft)
+    # Inlining the image creation and normalized FFT computations:
+    df2["density_image"] = df2["density_profile"].apply(
+        lambda profile: np.array(profile).reshape((32, 32))
+    )
+    df2["normalized_fft"] = df2["density_image"].apply(
+        lambda image: (lambda fft: fft / np.linalg.norm(fft.flatten()) if np.linalg.norm(fft.flatten()) != 0 else fft)(np.fft.fft2(image))
+    )
     
     # Create formatted string representations for matching
     chiN_str = df2["chiN"].apply(lambda x: f"{x:.6f}")
@@ -130,20 +103,20 @@ def process_density_data(df, rep_formulations_str):
             (fA_str   == rep_fA) &
             (tau_str  == rep_tau)
         ]
-        # Use the first matching row's FFT vector as reference (if available)
         if not rep_rows.empty:
             rep_fft = rep_rows["normalized_fft"].iloc[0]
             rep_fft_vectors[rep_name] = rep_fft.flatten()
     
-    # Compute dot product vectors for each sample and add as a column
+    # Inline dot product vector calculation:
     df2["dot_product_vector"] = df2["normalized_fft"].apply(
-        lambda fft: compute_dot_product_vector(fft, rep_fft_vectors)
+        lambda fft: np.array([np.abs(np.dot(fft.flatten(), ref_vec))
+                              for ref_vec in rep_fft_vectors.values()])
     )
     
     return df2
 
 # -------------------------------
-# STEP 5: Perform KMeans Clustering on Dot Product Features
+# STEP 3: Perform KMeans Clustering on Dot Product Features
 # -------------------------------
 def perform_clustering(df, desired_clusters):
     """
@@ -155,7 +128,7 @@ def perform_clustering(df, desired_clusters):
     return df
 
 # -------------------------------
-# STEP 6: Plot Clustering Results
+# STEP 4: Plot Clustering Results
 # -------------------------------
 def plot_clusters(df):
     """
@@ -191,7 +164,7 @@ def plot_clusters(df):
     plt.show()
 
 # -------------------------------
-# STEP 7: Copy Screenshot Files into Cluster Directories
+# STEP 5: Copy Screenshot Files into Cluster Directories
 # -------------------------------
 def copy_screenshots(df, source_dir, destination_dir):
     """
@@ -219,10 +192,10 @@ def copy_screenshots(df, source_dir, destination_dir):
             print(f"Warning: File {source_file} does not exist!")
 
 # -------------------------------
-# STEP 8: Main Execution Function
+# STEP 6: Main Execution Function
 # -------------------------------
 def main():
-    # HEXPhase - Representative formulations for each potential class of density.
+    # User-defined variables
     rep_formulations = {
         "correct": {"chiN": "34.924158", "fA": "0.461538", "tau": "0.568966"},
         "hollow": {"chiN": "34.983082", "fA": "0.604545", "tau": "0.563380"},
@@ -230,42 +203,34 @@ def main():
         "double_period": {"chiN": "34.623025", "fA": "0.691176", "tau": "0.607595"},
         "disordered": {"chiN": "15.036952", "fA": "0.138060", "tau": "0.695652"}
     }
-
-    # Base directory containing batch clusters.
+    
     base_directory = "/Users/luisbarajas/Desktop/Projects/Research_Projects/Poly/data/densities/DLH_32npw"
-
-    # Phase directory name
     phase = "HEXPhase"
-
-    # Number of clusters for KMeans clustering.
     desired_clusters = 5
-
-    # Directory containing density images
     source_dir = "/Users/luisbarajas/Desktop/Projects/Research_Projects/Poly/data/densities/screenshots_HEX"
-
-    # Directory for clustering density images together
     destination_dir = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/clusters"
-
-    # Collect density data from the specified directory structure
+    
+    # STEP 1: Collect density data
     df = collect_density_data(base_directory, phase)
     
-    # Process the density data: compute images, FFTs, and dot product vectors
+    # STEP 2: Process the density data to compute images, FFTs, and dot product vectors
     df_processed = process_density_data(df, rep_formulations)
     
-    # Perform KMeans clustering using the computed dot product features
+    # STEP 3: Perform KMeans clustering
     df_clustered = perform_clustering(df_processed, desired_clusters)
     
-    # Plot the clustering results
+    # STEP 4: Plot the clustering results
     plot_clusters(df_clustered)
     
-    # Copy screenshot files into cluster directories based on clustering results
+    # STEP 5: Copy screenshot files into cluster directories based on clustering results
     copy_screenshots(df_clustered, source_dir, destination_dir)
-
-    # Save df with dot_cluster labels
+    
+    # Save the clustered DataFrame as CSV
     target_save_directory = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results"
     os.makedirs(target_save_directory, exist_ok=True)
     output_csv = os.path.join(target_save_directory, "clustered_density_data.csv")
     df_clustered.to_csv(output_csv, index=False)
     print(f"Saved clustered dataframe to {output_csv}")
+
 if __name__ == "__main__":
     main()
