@@ -119,13 +119,11 @@ Since we do not have a model to predict cell length yet, the best approach to es
 
 2. Manually inspect the clusters to identify which ones contain densities that did not converge properly.
 
-3. Run `nearest_L_bad_sims.py` with the list of identified 'good' and 'bad' formulations to assign each 'bad' formulation the `L` value from its nearest 'good' neighbor.
+3. Run `bad_sims_nearest_L.py` with the list of identified 'good' and 'bad' formulations to assign each 'bad' formulation the `L` value from its nearest 'good' neighbor. Compile a file that contains the 'bad' formulations along with their corresponding estimated `L` values.
 
-4. Compile a file that contains the 'bad' formulations along with their corresponding estimated `L` values.
+4. Run `create_test_dirs.py` to create the directories needed to run simulations for each formulation.
 
-5. Run `create_test_dirs.py` to create the directories needed to run simulations for each formulation.
-
-6. Run `re_simulate_batch.sh` to simulate each formulation.
+5. Run `run_simulations.sh` to re-simulate each formulation.
 
 ## Current Work
 
@@ -155,13 +153,13 @@ After obtaining datasets containing formulations and their corresponding predict
 
 ### Current Work Flow
 
-1. Run `predicted_L.py` to collect a dataset of formulations and their corresponding predicted `L` values.
+1. Run `exp_predict_L.py` to collect a dataset of formulations and their corresponding predicted `L` values.
 
-2. Run `nearest_L_exp.py` to collect a dataset of formulations and their corresponding `L` from their nearest converged neighbor.
+2. Run `exp_nearest_L.py` to collect a dataset of formulations and their corresponding `L` from their nearest converged neighbor.
 
 3. Run `create_test_dirs.py` to build the directories required for running simulations for each formulation.
 
-4. Run `run_experiments.sh` to run the simulations within each batch created from the previous step using the `experiment.sh` shell script. This shell script will collect the metrics needed to analyze the effectiveness of predicting cell length for running computer simulations.
+4. Run `run_simulations.sh` to run the simulations within each batch created from the previous step using the `simulate.sh` shell script. This shell script will collect the metrics needed to analyze the effectiveness of predicting cell length for running computer simulations.
 
 ## Next Steps
 
