@@ -69,7 +69,7 @@ for chiN_dir in "$base_dir"/chiN*; do
       sed -i.bak "s/^\s*cellscaling = .*/      cellscaling = $nearest_L/" HEX.in
       
       # Run the simulation with HEX.in updated with the nearest L value
-      /home/luisbarajas/PolyFTS/bin/Release/PolyFTS.x HEX.in
+      /home/luisbarajas/PolyFTS/bin/Release/PolyFTS.x HEX.in > HEX_nearest_L.out
       
       # === Second Simulation (using predicted L value) ===
       # Print the predicted L value before simulation
@@ -79,7 +79,7 @@ for chiN_dir in "$base_dir"/chiN*; do
       sed -i.bak "s/^\s*cellscaling = .*/      cellscaling = $predicted_L/" HEX.in
       
       # Run the simulation with HEX.in updated with the predicted L value
-      /home/luisbarajas/PolyFTS/bin/Release/PolyFTS.x HEX.in
+      /home/luisbarajas/PolyFTS/bin/Release/PolyFTS.x HEX.in > HEX_predicted_L.out
       
       # Return to the base directory for the next iteration
       cd "$base_dir" || exit

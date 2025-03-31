@@ -1,115 +1,75 @@
 import os
 import glob
-import pandas as pd
-import re
-
-import os
-import glob
 import re
 import pandas as pd
 
-# -------------------------------
-# Function to extract lines containing total runtime and iterations completed from slurm outputs
-# -------------------------------
+# 1. Iterate through file paths of the form "*/Test/chiN*/fA*/tau*/HEXPhase"
+# Use glob with recursive search.
+pattern = os.path.join("**", "resimulate_batches", "**", "Test", "chiN*", "fA*", "tau*", "HEXPhase")
+hexphase_dirs = glob.glob(pattern, recursive=True)
 
-def extract_runtime_and_iters(directory, file_pattern='slurm*'):
-    """
-    Iterate through files in the given directory matching file_pattern and extract paired values:
-      - From a line like "* L value for 20.035500_0.357143_0.818182: 1.6799592857", extract the key "20.035500_0.357143_0.818182" 
-        and split it into three float columns: chiN, fA, and tau.
-      - From a subsequent line "SCFT Converged in 84200 time steps (total)", extract the iteration count (iters).
-      - From a later line "TOTAL Runtime: 143.05 sec", extract the runtime (Total_Runtime).
-    
-    The function assumes these lines occur in the file in the above relative order.
-    
-    Returns a DataFrame with columns:
-      - 'chiN', 'fA', 'tau': floats extracted from the L value key.
-      - 'iters': extracted iteration count as float.
-      - 'Total_Runtime': extracted runtime as float.
-      - 'group': even-indexed rows are labeled "nearest_L", odd-indexed rows "predicted_L".
-    
-    Parameters:
-    - directory (str): Path to the directory containing the files.
-    - file_pattern (str): Glob pattern to match files (default: 'slurm*').
-    """
-    full_pattern = os.path.join(directory, file_pattern)
-    
-    # Compile regex patterns:
-    # Pattern to capture the L value line:
-    lvalue_pattern = re.compile(r'^\S+\s+L value for\s+([\d\.]+)_([\d\.]+)_([\d\.]+):')
-    
-    # Pattern to capture the iteration count from "SCFT Converged in ... time steps"
-    iters_pattern = re.compile(r'^SCFT Converged in\s+(\d+)\s+time steps')
-    
-    # Pattern to capture the runtime value from "TOTAL Runtime: ..."
-    runtime_pattern = re.compile(r'^TOTAL Runtime:\s*([\d\.]+)')
-    
-    matched_data = []
-    
-    # Iterate over each file matching the pattern
-    for file_path in glob.glob(full_pattern):
-        # Initialize state variables
-        state = "await_lvalue"  # states: await_lvalue, await_converged, await_runtime
-        current_row = {}
+# 2. Function to extract chiN, fA, and tau values from the directory path as strings.
+def extract_parameters_from_path(path):
+    # Split the path into its components.
+    parts = path.split(os.sep)
+    chiN_val = fA_val = tau_val = None
+    for part in parts:
+        if part.startswith("chiN"):
+            chiN_val = part.replace("chiN", "")
+        elif part.startswith("fA"):
+            fA_val = part.replace("fA", "")
+        elif part.startswith("tau"):
+            tau_val = part.replace("tau", "")
+    return chiN_val, fA_val, tau_val
+
+# 3. Function to extract the iteration count from a file using the regex pattern.
+# The regex pattern: '^SCFT Converged in\s+(\d+)\s+time steps'
+def extract_iters_from_file(file_path, regex_pattern):
+    with open(file_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            match = regex_pattern.match(line)
+            if match:
+                return int(match.group(1))
+    # Return None if no match was found.
+    return None
+
+# Compile the regex pattern once.
+iters_regex = re.compile(r'^SCFT Converged in\s+(\d+)\s+time steps')
+
+# List to collect results for each HEXPhase folder.
+results = []
+
+# 4. Loop over each HEXPhase directory
+for hex_dir in hexphase_dirs:
+    if os.path.isdir(hex_dir):
+        # 2. Extract chiN, fA, tau values (stored as strings)
+        chiN_val, fA_val, tau_val = extract_parameters_from_path(hex_dir)
+        if not all([chiN_val, fA_val, tau_val]):
+            continue  # Skip if any parameter is missing
         
-        with open(file_path, 'r') as file:
-            for line in file:
-                line = line.strip()
+        # 3. Define the paths to the two output files.
+        predicted_file = os.path.join(hex_dir, "HEX_predicted_L.out")
+        nearest_file   = os.path.join(hex_dir, "HEX_nearest_L.out")
+        
+        # Check that both files exist.
+        if os.path.exists(predicted_file) and os.path.exists(nearest_file):
+            # Extract iteration counts from each file.
+            iters_predicted = extract_iters_from_file(predicted_file, iters_regex)
+            iters_nearest   = extract_iters_from_file(nearest_file, iters_regex)
+            
+            if iters_predicted is not None and iters_nearest is not None:
+                # 4. Take the difference in iterations from both.
+                iters_diff = iters_predicted - iters_nearest
                 
-                if state == "await_lvalue":
-                    # Look for the L value line.
-                    l_match = lvalue_pattern.match(line)
-                    if l_match:
-                        # Extract and convert key parts into floats.
-                        try:
-                            current_row['chiN'] = float(l_match.group(1))
-                            current_row['fA']   = float(l_match.group(2))
-                            current_row['tau']  = float(l_match.group(3))
-                        except ValueError:
-                            # If conversion fails, skip this line.
-                            continue
-                        state = "await_converged"
-                        continue  # Move to next line
-                
-                elif state == "await_converged":
-                    # Look for the converged line.
-                    iters_match = iters_pattern.match(line)
-                    if iters_match:
-                        current_row['iters'] = float(iters_match.group(1))
-                        state = "await_runtime"
-                        continue  # Move to next line
-                
-                elif state == "await_runtime":
-                    # Look for the runtime line.
-                    runtime_match = runtime_pattern.match(line)
-                    if runtime_match:
-                        current_row['Total_Runtime'] = float(runtime_match.group(1))
-                        # Add the current row to the matched data.
-                        matched_data.append(current_row)
-                        # Reset state for the next group in the same file.
-                        current_row = {}
-                        state = "await_lvalue"
-                        continue
-    
-    # Create a DataFrame from the collected data
-    df = pd.DataFrame(matched_data)
-    
-    # Add the "group" column: even indices get "nearest_L", odd indices get "predicted_L"
-    df['group'] = ['nearest_L' if i % 2 == 0 else 'predicted_L' for i in range(len(df))]
-    
-    return df
+                # 5. Store the results in the list.
+                results.append({
+                    "chiN": chiN_val,
+                    "fA": fA_val,
+                    "tau": tau_val,
+                    "iters_diff": iters_diff
+                })
 
-
-
-def main():
-    # base dir containing the slurm files
-    directory = '/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/experiment_rslts'
-
-    # collecting experiment results for each simulation (iter, Total_Runtime, group - nearest_L, predicted_L)
-    df = extract_runtime_and_iters(directory)
-    print(df[:20])
-
-    df.to_csv("/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/experiment_rslts/metrics.csv")
-
-if __name__ == "__main__":
-    main()
+# Create a DataFrame with columns: chiN, fA, tau, and iters_diff.
+df = pd.DataFrame(results)
+print(df)
