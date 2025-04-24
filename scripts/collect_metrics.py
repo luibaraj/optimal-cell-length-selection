@@ -5,8 +5,8 @@ import pandas as pd
 
 # 1. Iterate through file paths of the form "*/Test/chiN*/fA*/tau*/HEXPhase"
 # Use glob with recursive search.
-pattern = os.path.join("**", "resimulate_batches", "**", "Test", "chiN*", "fA*", "tau*", "HEXPhase")
-hexphase_dirs = glob.glob(pattern, recursive=True)
+pattern = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/resimulate_batch_rslts/resimulate_batches/batch0*/Tests/chiN*/fA*/tau*/HEXPhase"
+hexphase_dirs = glob.glob(pattern)
 
 # 2. Function to extract chiN, fA, and tau values from the directory path as strings.
 def extract_parameters_from_path(path):
@@ -41,6 +41,7 @@ iters_regex = re.compile(r'^SCFT Converged in\s+(\d+)\s+time steps')
 results = []
 
 # 4. Loop over each HEXPhase directory
+print(len(hexphase_dirs))
 for hex_dir in hexphase_dirs:
     if os.path.isdir(hex_dir):
         # 2. Extract chiN, fA, tau values (stored as strings)
@@ -72,4 +73,6 @@ for hex_dir in hexphase_dirs:
 
 # Create a DataFrame with columns: chiN, fA, tau, and iters_diff.
 df = pd.DataFrame(results)
-print(df)
+output_csv = '/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/experiment_rslts.csv'
+df.to_csv(output_csv, index=False)
+

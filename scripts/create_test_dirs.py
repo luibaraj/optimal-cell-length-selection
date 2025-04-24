@@ -102,11 +102,11 @@ def copy_phase_contents(df, source_base, target_base, n_batches, phase):
 # -------------------------------
 def main():
     # User-defined variables
-    TARGET_BASE_DIR = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/resimulate_batches"  # Target base directory path
-    SOURCE_BASE_DIR = "/Users/luisbarajas/Desktop/Projects/Research_Projects/Poly/data/densities/DLH_32npw"  # Source base directory path
-    CSV_PATH = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/exp_predicted_L.csv"  # CSV with 'key' column (formulations)
-    PHASE = "HEXPhase"  # Phase directory name (e.g., HEXPhase)
-    N_BATCHES = 30       # Number of batches to split formulations into for the target structu
+    TARGET_BASE_DIR = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/results/resimulate_batches"  # Target base directory path
+    SOURCE_BASE_DIR = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/data/GYR_32npw"  # Source base directory path
+    CSV_PATH = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/results/exp_predicted_L.csv"  # CSV with 'key' column (formulations)
+    PHASE = "GYRPhase"  # Phase directory name (e.g., HEXPhase)
+    N_BATCHES = 50       # Number of batches to split formulations into for the target structu
     
     # Load the CSV file containing the formulations
     df = pd.read_csv(CSV_PATH)

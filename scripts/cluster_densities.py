@@ -53,8 +53,15 @@ def collect_density_data(base_directory, phase):
                             with open(density_file, "r") as f:
                                 # Read non-header, non-empty lines
                                 lines = [line for line in f if not line.lstrip().startswith("#") and line.strip()]
-                            # Extract the third column values as floats (if available)
-                            profile = [float(line.split()[2]) for line in lines if len(line.split()) >= 3]
+                            # Determine which column to extract:
+                            # if phase is "GYRPhase", extract fourth column (index 3), else third column (index 2)
+                            col_idx = 3 if phase == "GYRPhase" else 2
+                            # Extract the desired column as floats (if available)
+                            profile = [
+                                float(tokens[col_idx])
+                                for tokens in (line.split() for line in lines)
+                                if len(tokens) > col_idx
+                            ]
                             density_vector = np.array(profile)
                             data_list.append({
                                 "chiN": chiN_val,
@@ -65,55 +72,78 @@ def collect_density_data(base_directory, phase):
     df = pd.DataFrame(data_list)
     return df
 
+
 # -------------------------------
 # STEP 2: Process Density Data and Compute FFTs & Dot Product Vectors
 # -------------------------------
-def process_density_data(df, rep_formulations_str):
+def process_density_data(df, rep_formulations_str, phase):
     """
     Process the density DataFrame:
-    - Convert density profiles to images (reshaped to 32x32 arrays).
-    - Compute normalized FFT for each image.
+    - If phase is "HEXPhase": Convert density profiles to images (reshaped to 32x32) 
+      and compute normalized 2D FFT for each image.
+    - If phase is "GYRPhase": Convert density profiles to images (reshaped to 32x32x32) 
+      and compute normalized 3D FFT for each image.
     - Build reference FFT vectors from rep_formulations_str.
     - Compute dot product vectors for each sample.
     """
+
     df2 = df.copy()
-    
-    # Inlining the image creation and normalized FFT computations:
-    df2["density_image"] = df2["density_profile"].apply(
-        lambda profile: np.array(profile).reshape((32, 32))
-    )
-    df2["normalized_fft"] = df2["density_image"].apply(
-        lambda image: (lambda fft: fft / np.linalg.norm(fft.flatten()) if np.linalg.norm(fft.flatten()) != 0 else fft)(np.fft.fft2(image))
-    )
-    
+
+    def to_image(profile, target_shape):
+        """Convert 1D profile to image with the given shape."""
+        return np.array(profile).reshape(target_shape)
+
+    def normalized_fft(image, fft_func):
+        """Compute the FFT using fft_func and normalize the result."""
+        fft_result = fft_func(image)
+        flat_fft = fft_result.flatten()
+        norm = np.linalg.norm(flat_fft)
+        return fft_result if norm == 0 else fft_result / norm
+
+    # Choose processing based on phase
+    if phase == "GYRPhase":
+        target_shape = (32, 32, 32)
+        fft_func = np.fft.fftn  # 3D FFT
+    else:
+        target_shape = (32, 32)
+        fft_func = np.fft.fft2  # 2D FFT
+
+    # Process the density profiles to images and compute normalized FFTs
+    df2["density_image"] = df2["density_profile"].apply(lambda profile: to_image(profile, target_shape))
+    df2["normalized_fft"] = df2["density_image"].apply(lambda img: normalized_fft(img, fft_func))
+
     # Create formatted string representations for matching
-    chiN_str = df2["chiN"].apply(lambda x: f"{x:.6f}")
-    fA_str   = df2["fA"].apply(lambda x: f"{x:.6f}")
-    tau_str  = df2["tau"].apply(lambda x: f"{x:.6f}")
-    
+    df2["chiN_str"] = df2["chiN"].apply(lambda x: f"{x:.6f}")
+    df2["fA_str"]   = df2["fA"].apply(lambda x: f"{x:.6f}")
+    df2["tau_str"]  = df2["tau"].apply(lambda x: f"{x:.6f}")
+
     # Build reference FFT vectors from rep_formulations_str dictionary
     rep_fft_vectors = {}
     for rep_name, rep_vals in rep_formulations_str.items():
         rep_chiN = rep_vals["chiN"]
         rep_fA   = rep_vals["fA"]
         rep_tau  = rep_vals["tau"]
-        
+
         rep_rows = df2[
-            (chiN_str == rep_chiN) &
-            (fA_str   == rep_fA) &
-            (tau_str  == rep_tau)
+            (df2["chiN_str"] == rep_chiN) &
+            (df2["fA_str"]   == rep_fA) &
+            (df2["tau_str"]  == rep_tau)
         ]
         if not rep_rows.empty:
             rep_fft = rep_rows["normalized_fft"].iloc[0]
             rep_fft_vectors[rep_name] = rep_fft.flatten()
-    
-    # Inline dot product vector calculation:
+
+    # Inline dot product vector calculation
     df2["dot_product_vector"] = df2["normalized_fft"].apply(
         lambda fft: np.array([np.abs(np.dot(fft.flatten(), ref_vec))
                               for ref_vec in rep_fft_vectors.values()])
     )
-    
+
+    # Optionally drop the helper string columns if they are no longer needed:
+    df2.drop(columns=["chiN_str", "fA_str", "tau_str"], inplace=True)
+
     return df2
+
 
 # -------------------------------
 # STEP 3: Perform KMeans Clustering on Dot Product Features
@@ -196,25 +226,34 @@ def copy_screenshots(df, source_dir, destination_dir):
 # -------------------------------
 def main():
     # User-defined variables
-    rep_formulations = {
-        "correct": {"chiN": "34.924158", "fA": "0.461538", "tau": "0.568966"},
-        "hollow": {"chiN": "34.983082", "fA": "0.604545", "tau": "0.563380"},
-        "bleeding": {"chiN": "34.887595", "fA": "0.705607", "tau": "0.544304"},
-        "double_period": {"chiN": "34.623025", "fA": "0.691176", "tau": "0.607595"},
-        "disordered": {"chiN": "15.036952", "fA": "0.138060", "tau": "0.695652"}
+    # rep_formulations = { # represenatative for the HEX 
+    #     "correct": {"chiN": "34.924158", "fA": "0.461538", "tau": "0.568966"},
+    #     "hollow": {"chiN": "34.983082", "fA": "0.604545", "tau": "0.563380"},
+    #     "bleeding": {"chiN": "34.887595", "fA": "0.705607", "tau": "0.544304"},
+    #     "double_period": {"chiN": "34.623025", "fA": "0.691176", "tau": "0.607595"},
+    #     "disordered": {"chiN": "15.036952", "fA": "0.138060", "tau": "0.695652"}
+    # }
+
+    rep_formulations = { # represenatative for the GYR 
+        "correct1": {"chiN": "34.993632", "fA": "0.271028", "tau": "0.895833"},
+        "correct2": {"chiN": "34.990752", "fA": "0.663551", "tau": "0.565789"},
+        "incorrect1": {"chiN": "34.983414", "fA": "0.169421", "tau": "0.878788"},
+        "incorrect2": {"chiN": "34.953805", "fA": "0.756250", "tau": "0.804598"},
+        "incorrect3": {"chiN": "15.456460", "fA": "0.279070", "tau": "0.552632"}
     }
+
     
-    base_directory = "/Users/luisbarajas/Desktop/Projects/Research_Projects/Poly/data/densities/DLH_32npw"
-    phase = "HEXPhase"
+    base_directory = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/data/GYR_32npw"
+    phase = "GYRPhase"
     desired_clusters = 5
-    source_dir = "/Users/luisbarajas/Desktop/Projects/Research_Projects/Poly/data/densities/screenshots_HEX"
-    destination_dir = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/clusters"
+    source_dir = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/data/GYR_32npw/screenshots_GYR"
+    destination_dir = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/results/clusters"
     
     # STEP 1: Collect density data
     df = collect_density_data(base_directory, phase)
-    
+
     # STEP 2: Process the density data to compute images, FFTs, and dot product vectors
-    df_processed = process_density_data(df, rep_formulations)
+    df_processed = process_density_data(df, rep_formulations, phase)
     
     # STEP 3: Perform KMeans clustering
     df_clustered = perform_clustering(df_processed, desired_clusters)
@@ -226,7 +265,7 @@ def main():
     copy_screenshots(df_clustered, source_dir, destination_dir)
     
     # Save the clustered DataFrame as CSV
-    target_save_directory = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results"
+    target_save_directory = "/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/results"
     os.makedirs(target_save_directory, exist_ok=True)
     output_csv = os.path.join(target_save_directory, "clustered_density_data.csv")
     df_clustered.to_csv(output_csv, index=False)

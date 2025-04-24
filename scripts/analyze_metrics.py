@@ -27,7 +27,7 @@ def visualize_iters_diff(df, title):
 
 def main():
 
-    df = pd.read_csv('/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/experiment_rslts/metrics.csv')
+    df = pd.read_csv('/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results/experiment_rslts.csv')
 
     
 

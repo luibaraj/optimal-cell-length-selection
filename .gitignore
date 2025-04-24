@@ -1,16 +1,5 @@
-# Ignore configuration files
-config/secrets.yml
-
-# Ignore all log files
-*.log
-
-# Ignore entire directory
-temp/
-
-# Ignore Python virtual environment folder
-/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/venv
-
-# Ignore any directory named 'results' (even if it's a subdirectory)
-/Users/luisbarajas/Documents/GitHub/ML-enabled-SCFT/scripts/results
-
-.SD_Store
+/results/
+/venv/
+.DS_Store
+/simulations/.DS_Store
+/images/

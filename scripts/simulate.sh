@@ -3,8 +3,8 @@
 phase="HEXPhase"
 
 # Define the full paths to your CSV files (adjust these as needed)
-nearest_csv="/home/luisbarajas/experiments/nearest_vs_predicted/nearest_L_exp.csv"
-predicted_csv="/home/luisbarajas/experiments/nearest_vs_predicted/predicted_L.csv"
+nearest_csv="/home/luisbarajas/experiments/nearest_vs_predicted/exp_nearest_L.csv"
+predicted_csv="/home/luisbarajas/experiments/nearest_vs_predicted/exp_predicted_L.csv"
 
 # Base directory (assumed to be the current directory: Tests)
 base_dir=$(pwd)
